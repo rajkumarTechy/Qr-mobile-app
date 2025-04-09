@@ -1,39 +1,55 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { ActivityIndicator, SafeAreaView, StatusBar, ToastAndroid, View } from "react-native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import "./global.css";
+import Toast from 'react-native-toast-message'
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import TabLayout from "./(Tabs)/_layout";
+import Register from "./Screens/Register";
+import Login from "./Screens/Login";
+import AuthProvider, { useAuth } from "./AuthContext";
+import App from "./(Tabs)/Screens/Location";
+import Security from "./(Tabs)/Screens/Security";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+const Stack = createNativeStackNavigator();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+function RootNavigator() {
+  const { isLoggedIn, loading } = useAuth();
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#1B364C" />
+      </View>
+    );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+      <StatusBar
+        translucent
+        backgroundColor={"white"}
+        barStyle={"dark-content"}
+      />
+      <AuthProvider>
+        <Stack.Navigator
+          initialRouteName={isLoggedIn ? "Tabs" : "Login"}
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="Tabs" component={TabLayout} />
+          <Stack.Screen name="Register" component={Register} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen options={{headerShown: true}} name="security" component={Security}/>
+        </Stack.Navigator>
+      </AuthProvider>
+    </SafeAreaView>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootNavigator />
+      <Toast />
+    </AuthProvider>
   );
 }
