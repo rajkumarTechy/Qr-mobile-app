@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { API_BASE_URL } from "./utils/API_URL";
 
 interface AuthProps {
   loading: boolean;
@@ -49,6 +51,27 @@ export default function AuthProvider({
     if (phoneId) await AsyncStorage.setItem("phoneId", phoneId);
   };
 
+  const ValidatePhoneId = async (userId: string, phoneId: string) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/users/auth/check-phoneId`, {
+      userId,
+      phoneId,
+    });
+
+    if (response.data) {
+      console.log("Phone ID exists in the backend:", response.data);
+      return true;
+    } else {
+      console.log("Phone ID not found in the backend");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error checking phoneId:", error);
+    return false;
+  }
+};
+
+
   useEffect(() => {
     const loadAuthState = async () => {
       const storedIsLoggedIn = await AsyncStorage.getItem("isLoggedIn");
@@ -67,6 +90,18 @@ export default function AuthProvider({
       }
       if (storedPhoneId) {
         setPhoneId(storedPhoneId);
+      }
+
+      const exists = storedUserId && storedPhoneId 
+        ? await ValidatePhoneId(storedUserId, storedPhoneId) 
+        : false;
+      if(!exists) {
+        console.warn("Invalid phoneId detected. Logging out.");
+        await AsyncStorage.clear();
+        setIsLoggedInState(false);
+        setUserId(null);
+        setFullName(null);
+        setPhoneId(null);
       }
 
       setLoading(false);

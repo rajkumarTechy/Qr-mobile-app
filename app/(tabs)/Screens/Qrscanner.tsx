@@ -29,7 +29,7 @@ export default function App() {
     );
   }
 
-  const addAttendance = async (data: string) => {
+  const qrValidation = async (data: string) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/attendance`, data);
       if (response.status === 201) {
@@ -48,7 +48,7 @@ export default function App() {
 
   const handleBarcodeScanned = ({ data }: {data: string}) => {
     setScanned(true);
-    addAttendance(data);
+    qrValidation(data);
   };
 
   return (

@@ -5,13 +5,13 @@ import {
   Pressable,
   TextInput,
   StyleSheet,
-  KeyboardAvoidingView, // Import KeyboardAvoidingView
-  Platform, // Import Platform
-  ScrollView, // Import ScrollView
+  KeyboardAvoidingView, 
+  Platform,
+  ScrollView, 
 } from "react-native";
 import React, { useState } from "react";
 
-// Import necessary items from react-hook-form
+
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 
 import Feather from "@expo/vector-icons/Feather";
@@ -24,10 +24,9 @@ import { useNavigation } from "expo-router";
 import axios from "axios";
 import { API_BASE_URL } from "../utils/API_URL";
 import uuid from 'react-native-uuid';
-import { useAuth } from "../AuthContext";
+import { useAuth } from "../AuthContext"; 
 import Toast from "react-native-toast-message";
 
-// Define the type for your form data
 type FormData = {
   fullName: string;
   employeeId: string;

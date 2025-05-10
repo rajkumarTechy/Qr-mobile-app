@@ -12,12 +12,11 @@ import { useAuth } from "@/app/AuthContext";
 import axios from "axios";
 import { API_BASE_URL } from "@/app/utils/API_URL";
 import * as Location from "expo-location";
-import { useNavigation } from "expo-router";
 import Toast from "react-native-toast-message";
 
 export default function Modal({
   onClose,
-  leaveState = false,
+  leaveState,
 }: {
   onClose: () => void;
   leaveState?: boolean;
@@ -38,7 +37,6 @@ export default function Modal({
   const screenWidth = Dimensions.get("window").width;
   const date = new Date().toLocaleDateString();
 
-  const navigation = useNavigation();
 
   const colors = {
     primary: "#007AFF",
@@ -86,10 +84,10 @@ export default function Modal({
   }, []);
 
   const isInsideRoomBoundingBox = (latitude: number, longitude: number) => {
-    const minLat = 9.463793886873686; // Bottom-left latitude (Smaller value)
-    const maxLat = 9.463976827257445; // Top-right latitude (Larger value)
-    const minLng = 77.93492946803633; // Bottom-left longitude
-    const maxLng = 77.93514514413638; // Top-right longitude
+    const minLat = 9.470391; // Bottom-left latitude (Smaller value)
+    const maxLat = 9.470448; // Top-right latitude (Larger value)
+    const minLng = 77.770850; // Bottom-left longitude
+    const maxLng = 77.771160; // Top-right longitude
 
     return (
       latitude >= minLat &&
@@ -105,7 +103,6 @@ export default function Modal({
   } else if (location) {
     const { latitude, longitude } = location.coords;
 
-    // text = "✅ Verified";
 
     if (isInsideRoomBoundingBox(latitude, longitude)) {
       text = "✅ Verified";
@@ -126,7 +123,7 @@ export default function Modal({
           if (leave.isCheckedOut) {
             Toast.show({
               type: "info",
-              text1: "Today's attendance is already completed 👋",
+              text1: "Today's attendance is already completed",
             });
             return;
           } else {
@@ -160,7 +157,7 @@ export default function Modal({
           if (attendance.isCheckedOut) {
             Toast.show({
               type: "info",
-              text1: "Today's attendance is already completed 👋",
+              text1: "Today's attendance is already completed",
             });
             return;
           }
@@ -171,11 +168,12 @@ export default function Modal({
               type: "success",
               text1: "Check-Out Successful!",
             });
-            onClose();
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "Home" as never }],
-            });
+            // onClose();
+            // navigation.reset({
+            //   index: 0,
+            //   routes: [{ name: "Home" as never }],
+            // });
+            setDisable(true)
           }
         } else {
           await axios.post(`${API_BASE_URL}/attendance/check-in/${userId}`);
@@ -183,11 +181,12 @@ export default function Modal({
             type: "success",
             text1: "Check-In Successful!",
           });
-          onClose();
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Home" as never }],
-          });
+          // onClose();
+          // navigation.reset({
+          //   index: 0,
+          //   routes: [{ name: "Home" as never }],
+          // });
+          setDisable(true)
         }
       } catch (err: any) {
         console.log(err);
@@ -202,10 +201,20 @@ export default function Modal({
   };
 
   useEffect(() => {
-    if (leaveState || location) {
+  if (leaveState) {
+    setDisable(false); // Allow confirming leave
+  } else if (location) {
+    const { latitude, longitude } = location.coords;
+
+    if (isInsideRoomBoundingBox(latitude, longitude)) {
       setDisable(false);
+    } else {
+      setDisable(true);
     }
-  }, [location, leaveState]);
+  }
+}, [location, leaveState]);
+
+  
 
   return (
     <>
@@ -250,7 +259,8 @@ export default function Modal({
                 </Text>
               </Pressable>
               <Pressable
-                style={[styles.button, styles.primaryButton]}
+                style={[styles.button, styles.primaryButton,
+                  disable && styles.conformButtomDisabled]}
                 disabled={disable}
                 onPress={handleAttendance}
               >
@@ -260,8 +270,7 @@ export default function Modal({
                   <Text
                     style={[
                       styles.buttonText,
-                      styles.primaryButtonText,
-                      isSubmitting && styles.conformButtomDisabled,
+                      styles.primaryButtonText
                     ]}
                   >
                     Confirm
